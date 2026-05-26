@@ -157,17 +157,17 @@ int main(int argc, char** argv)
     }
 
     const wz::Solver solver(points.xs, points.ys, points.bs, args.config);
-    const TimedSolve ts = RunTimed(solver, args.scalar, args.reps);
+    const auto [result, ms_mean] = RunTimed(solver, args.scalar, args.reps);
 
     if (args.quiet)
     {
-        PrintQuiet(ts.result);
+        PrintQuiet(result);
     }
     else
     {
         const char* lane_name = args.scalar ? wz::ScalarLane::kName : wz::ActiveLane::kName;
         const std::size_t lane_width = args.scalar ? wz::ScalarLane::kLanes : wz::ActiveLane::kLanes;
-        PrintHuman(ts.result, points.Size(), lane_name, lane_width, ts.ms_mean, args.reps);
+        PrintHuman(result, points.Size(), lane_name, lane_width, ms_mean, args.reps);
     }
-    return ts.result.converged ? kExitConverged : kExitMaxIter;
+    return result.converged ? kExitConverged : kExitMaxIter;
 }

@@ -67,7 +67,7 @@ namespace fweisz
 
         TEST(SolverTest, ScalarLaneAndActiveLaneAgree)
         {
-            std::mt19937_64 rng(42);
+            std::mt19937_64 rng(42); // NOLINT(*-msc51-cpp)
             std::uniform_real_distribution<double> coord(-100.0, 100.0);
             std::uniform_real_distribution<double> weight(0.1, 5.0);
 

@@ -22,7 +22,6 @@
 #include "fweisz/cmd_parser.h"
 
 #include <gtest/gtest.h>
-#include <array>
 #include <cstddef>
 
 namespace fweisz
@@ -38,6 +37,7 @@ namespace fweisz
 
         TEST(CmdParserTest, DefaultsWhenNoArgs)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -53,6 +53,7 @@ namespace fweisz
 
         TEST(CmdParserTest, TreatsPositionalArgAsInputPath)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "examples/eiselt.txt"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -62,6 +63,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ShortHelpFlagSetsHelpRequested)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "-h"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -70,6 +72,7 @@ namespace fweisz
 
         TEST(CmdParserTest, LongHelpFlagSetsHelpRequested)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--help"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -79,6 +82,7 @@ namespace fweisz
         TEST(CmdParserTest, HelpShortCircuitsLaterArgs)
         {
             // A bad value after --help must not produce an error: help wins.
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--help", "--max-iter", "not-a-number"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -87,6 +91,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ScalarFlagSetsScalar)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--scalar"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -95,6 +100,7 @@ namespace fweisz
 
         TEST(CmdParserTest, QuietFlagSetsQuiet)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--quiet"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -103,6 +109,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ParsesTolerance)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--tol", "1.5e-6"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -111,6 +118,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ParsesMaxIter)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--max-iter", "2500"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -119,6 +127,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ParsesEps2)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--eps2", "1e-30"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -127,6 +136,7 @@ namespace fweisz
 
         TEST(CmdParserTest, ParsesReps)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--reps", "7"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());
@@ -135,6 +145,7 @@ namespace fweisz
 
         TEST(CmdParserTest, CombinesMultipleFlagsAndPositional)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {
                 "fweisz", "--scalar", "--quiet", "--tol", "1e-10",
                 "--max-iter", "1000", "--reps", "3", "input.txt"
@@ -152,6 +163,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsUnknownLongOption)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--bogus"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -160,6 +172,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsUnknownShortOption)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "-x"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -168,6 +181,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsMissingValueAtEndOfArgv)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--tol"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -176,6 +190,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsNonNumericDoubleValue)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--tol", "abc"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -184,6 +199,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsNonNumericIntegerValue)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--max-iter", "abc"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -192,6 +208,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsZeroMaxIter)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--max-iter", "0"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -200,6 +217,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsNegativeMaxIter)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--max-iter", "-3"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -208,6 +226,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsZeroReps)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "--reps", "0"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -216,6 +235,7 @@ namespace fweisz
 
         TEST(CmdParserTest, RejectsMultiplePositionalArgs)
         {
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "a.txt", "b.txt"};
             const auto r = ParseLiterals(argv);
             ASSERT_FALSE(r.has_value());
@@ -226,6 +246,7 @@ namespace fweisz
         {
             // The original behaviour: a single `-` falls through to the positional
             // branch and is recorded as the input path.
+            // ReSharper disable once CppVariableCanBeMadeConstexpr
             const char* const argv[] = {"fweisz", "-"};
             const auto r = ParseLiterals(argv);
             ASSERT_TRUE(r.has_value());

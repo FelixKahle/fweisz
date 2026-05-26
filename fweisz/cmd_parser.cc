@@ -97,7 +97,7 @@ namespace fweisz
         CmdParser::Error MakeMultipleInputs(std::string_view first, std::string_view second)
         {
             return {CmdParser::Error::Kind::MultipleInputs,
-                std::format("multiple input files given: \"{}\" and \"{}\"", first, second)};
+                std::format(R"(multiple input files given: "{}" and "{}")", first, second)};
         }
     } // namespace
 

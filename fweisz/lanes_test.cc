@@ -157,13 +157,13 @@ namespace fweisz
         // -------------------------------------------------------------------------------------------------------------
 
         template <typename Lane>
+        // ReSharper disable once CppDFAConstantParameter
         double SumWithLane(const double* p, std::size_t n)
         {
             // Process whole lanes, then a scalar tail.
             std::size_t i = 0;
             Lane acc = Lane::Zero();
-            const std::size_t main = n & ~(Lane::kLanes - 1);
-            for (; i < main; i += Lane::kLanes)
+            for (const std::size_t main = n & ~(Lane::kLanes - 1); i < main; i += Lane::kLanes)
             {
                 acc = acc + Lane::Load(p + i);
             }
