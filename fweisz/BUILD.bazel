@@ -33,6 +33,16 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "cmd_parser",
+    srcs = ["cmd_parser.cc"],
+    hdrs = ["cmd_parser.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":algorithm",
+    ],
+)
+
 cc_binary(
     name = "console",
     srcs = [
@@ -40,6 +50,7 @@ cc_binary(
     ],
     deps = [
         ":algorithm",
+        ":cmd_parser",
         ":lanes",
         ":parser",
     ],
@@ -48,15 +59,6 @@ cc_binary(
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-
-cc_test(
-    name = "parser_test",
-    srcs = ["parser_test.cc"],
-    deps = [
-        ":parser",
-        "@googletest//:gtest_main",
-    ],
-)
 
 cc_test(
     name = "algorithm_test",
@@ -69,11 +71,29 @@ cc_test(
 )
 
 cc_test(
+    name = "cmd_parser_test",
+    srcs = ["cmd_parser_test.cc"],
+    deps = [
+        ":cmd_parser",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "lanes_test",
     srcs = ["lanes_test.cc"],
     deps = [
         ":lanes",
         "//fweisz/base:simd",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "parser_test",
+    srcs = ["parser_test.cc"],
+    deps = [
+        ":parser",
         "@googletest//:gtest_main",
     ],
 )

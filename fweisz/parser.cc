@@ -24,7 +24,6 @@
 #include <expected>
 #include <format>
 #include <istream>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -63,19 +62,18 @@ namespace fweisz
             return Parser::Error{kind, lineno, std::move(message), std::string(raw)};
         }
 
-        /// @brief Parse a single data line, appending one point on success.
+        /// @brief Parse a single physical line, appending one point on success.
         ///
-        /// Empty / comment lines are reported as `std::nullopt` so the caller
-        /// can distinguish "skipped" from "appended". A bad line yields an
+        /// Empty / comment lines are accepted no-ops; bad data lines yield an
         /// @ref Parser::Error inside `std::unexpected`.
-        [[nodiscard]] std::expected<std::optional<std::monostate>, Parser::Error>
+        [[nodiscard]] std::expected<void, Parser::Error>
         ParseOneLine(const std::string_view line, const std::size_t lineno, Parser::Points& out)
         {
             switch (Classify(line))
             {
                 case LineKind::Empty:
                 case LineKind::Comment:
-                    return std::nullopt;
+                    return {};
                 case LineKind::Data:
                     break;
             }
@@ -96,7 +94,7 @@ namespace fweisz
             out.xs.push_back(x);
             out.ys.push_back(y);
             out.bs.push_back(b);
-            return std::monostate{};
+            return {};
         }
     } // namespace
 

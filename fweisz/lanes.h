@@ -65,6 +65,7 @@ namespace fweisz
     concept SimdLane = std::default_initializable<L> && std::copyable<L> && requires(L v, double s, const double* p)
     {
         { L::kLanes }          -> std::convertible_to<std::size_t>;
+        { L::kName }           -> std::convertible_to<const char*>;
         { L::Broadcast(s) }    -> std::same_as<L>;
         { L::Zero() }          -> std::same_as<L>;
         { L::Load(p) }         -> std::same_as<L>;
@@ -99,6 +100,9 @@ namespace fweisz
 
         /// @brief Number of doubles processed per lane operation.
         static constexpr std::size_t kLanes = 1;
+
+        /// @brief Human-readable identifier, suitable for diagnostics / logging.
+        static constexpr const char* kName = "ScalarLane";
 
         /// @brief Default-construct an uninitialized lane.
         ScalarLane() = default;
@@ -192,6 +196,9 @@ namespace fweisz
 
         /// @brief Number of doubles processed per lane operation.
         static constexpr std::size_t kLanes = 4;
+
+        /// @brief Human-readable identifier, suitable for diagnostics / logging.
+        static constexpr const char* kName = "Avx2Lane";
 
         /// @brief Default-construct an uninitialized lane.
         Avx2Lane() = default;
@@ -289,6 +296,9 @@ namespace fweisz
 
         /// @brief Number of doubles processed per lane operation.
         static constexpr std::size_t kLanes = 2;
+
+        /// @brief Human-readable identifier, suitable for diagnostics / logging.
+        static constexpr const char* kName = "NeonLane";
 
         /// @brief Default-construct an uninitialized lane.
         NeonLane() = default;

@@ -20,7 +20,6 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "fweisz/parser.h"
-
 #include <gtest/gtest.h>
 
 #include <sstream>
@@ -151,16 +150,6 @@ namespace fweisz
             ASSERT_FALSE(r.has_value());
             EXPECT_EQ(r.error().line, 2u);
             EXPECT_EQ(r.error().raw, "bad");
-        }
-
-        TEST(ParserTest, ParserInstanceIsReusableAcrossInputs)
-        {
-            const auto a = Parser::ParseString("1 2 3\n");
-            const auto b = Parser::ParseString("4 5 6\n");
-            ASSERT_TRUE(a.has_value());
-            ASSERT_TRUE(b.has_value());
-            EXPECT_DOUBLE_EQ(a->xs[0], 1.0);
-            EXPECT_DOUBLE_EQ(b->xs[0], 4.0);
         }
 
         TEST(ParserTest, ParseAcceptsArbitraryIstream)

@@ -20,11 +20,9 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "fweisz/algorithm.h"
-
 #include "fweisz/lanes.h"
 
 #include <gtest/gtest.h>
-
 #include <cmath>
 #include <random>
 #include <vector>

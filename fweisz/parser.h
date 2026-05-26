@@ -26,11 +26,8 @@
 /// numbers, `x y b`, where `b > 0` is the weight. Blank lines and lines whose
 /// first non-whitespace character is `#` are treated as comments.
 ///
-/// The parser API is built around C++23 `std::expected`: every parse function
-/// returns either the fully-populated @ref Parser::Points value or a structured
-/// @ref Parser::Error describing what went wrong and where. There is no
-/// mutable state on a @ref Parser instance and no "release the buffer"
-/// step — the result owns its data.
+/// Each parse function returns either the parsed @ref Parser::Points or a
+/// structured @ref Parser::Error describing what went wrong and where.
 
 #ifndef FWEISZ_PARSER_H_
 #define FWEISZ_PARSER_H_
@@ -46,15 +43,9 @@ namespace fweisz
 {
     /// @brief Parser for the fweisz `x y b` text format.
     ///
-    /// Stateless: every @c Parse* function is a `const` member that returns
-    /// a fresh @ref Points value on success or a @ref Error on the first
-    /// problem encountered. A single @ref Parser instance may be reused
-    /// across any number of inputs from any number of threads.
-    ///
     /// Typical usage:
     /// @code
-    /// const fweisz::Parser parser;
-    /// auto result = parser.Parse(std::cin);
+    /// const auto result = fweisz::Parser::Parse(std::cin);
     /// if (!result) {
     ///     std::fprintf(stderr, "%s\n", result.error().Format().c_str());
     ///     return 2;
@@ -106,9 +97,11 @@ namespace fweisz
             std::string message; ///< Human-readable description of the failure.
             std::string raw;     ///< Verbatim contents of the offending line (without the trailing newline).
 
-            /// @brief Render a single-line, user-facing string.
+            /// @brief Render a single-line, user-facing diagnostic.
             ///
-            /// Example: `parse error on line 4: expected three whitespace-separated numbers ` `x y b` `("bad bad")`.
+            /// Composes the failure category, the 1-based @ref line number,
+            /// the @ref message, and (when non-empty) the @ref raw line
+            /// content.
             [[nodiscard]] std::string Format() const;
         };
 

@@ -20,11 +20,9 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "fweisz/lanes.h"
-
 #include "fweisz/base/simd.h"
 
 #include <gtest/gtest.h>
-
 #include <array>
 #include <cmath>
 
@@ -42,6 +40,29 @@ namespace fweisz
 #endif
 #if FWEISZ_HAS_NEON
         static_assert(SimdLane<NeonLane>);
+#endif
+
+        // -------------------------------------------------------------------------------------------------------------
+        // kName is a non-null identifier matching each lane's class name.
+        // -------------------------------------------------------------------------------------------------------------
+
+        TEST(ScalarLaneTest, NameIsScalarLane)
+        {
+            EXPECT_STREQ(ScalarLane::kName, "ScalarLane");
+        }
+
+#if FWEISZ_HAS_AVX2
+        TEST(Avx2LaneTest, NameIsAvx2Lane)
+        {
+            EXPECT_STREQ(Avx2Lane::kName, "Avx2Lane");
+        }
+#endif
+
+#if FWEISZ_HAS_NEON
+        TEST(NeonLaneTest, NameIsNeonLane)
+        {
+            EXPECT_STREQ(NeonLane::kName, "NeonLane");
+        }
 #endif
 
         // -------------------------------------------------------------------------------------------------------------

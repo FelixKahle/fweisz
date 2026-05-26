@@ -59,9 +59,12 @@ fweisz/
     ├── algorithm_test.cc    ← GoogleTest unit tests for the solver
     ├── lanes.h              ← SimdLane concept + ScalarLane / Avx2Lane / NeonLane
     ├── lanes_test.cc        ← GoogleTest per-lane + differential tests
-    ├── parser.h             ← Parser class for the `x y b` text format
+    ├── parser.h             ← Parser for the `x y b` text format
     ├── parser.cc            ← Parser implementation
     ├── parser_test.cc       ← GoogleTest unit tests for the parser
+    ├── cmd_parser.h         ← CmdParser for the CLI options
+    ├── cmd_parser.cc        ← CmdParser implementation
+    ├── cmd_parser_test.cc   ← GoogleTest unit tests for the CLI parser
     ├── console.cc           ← CLI driver
     └── base/
         ├── platform.h       ← Compiler-attribute shims (force-inline, restrict, ...)
@@ -79,10 +82,10 @@ Requires [Bazel](https://bazel.build/) (Bzlmod) and a C++23 toolchain
 bazel build //fweisz:console
 
 # Build just the libraries (sanity check).
-bazel build //fweisz:algorithm //fweisz:lanes //fweisz:parser
+bazel build //fweisz:algorithm //fweisz:lanes //fweisz:parser //fweisz:cmd_parser
 
 # Run the test suite (GoogleTest).
-bazel test //fweisz:parser_test //fweisz:algorithm_test //fweisz:lanes_test
+bazel test //fweisz:algorithm_test //fweisz:lanes_test //fweisz:parser_test //fweisz:cmd_parser_test
 ```
 
 The resulting binary lives at `bazel-bin/fweisz/console`.
@@ -171,7 +174,7 @@ adversarial weight ratios:
 ```sh
 $ bazel-bin/fweisz/console examples/eiselt.txt
 n          = 5
-lane       = ActiveLane
+lane       = Avx2Lane (width 4)
 S          = (50.5620808176, 50.5620808176)
 K(S)       = 562.8640600350
 iterations = 500
@@ -179,13 +182,16 @@ converged  = no
 time       = 0.040 ms (mean of 1 run)
 ```
 
+(The `lane` line resolves to whichever SIMD wrapper the build target
+supports: `Avx2Lane`, `NeonLane`, or `ScalarLane`.)
+
 A well-behaved triangle of three unit-weight points converges quickly (its
 optimum is the Fermat point):
 
 ```sh
 $ printf '0 0 1\n10 0 1\n5 8 1\n' | bazel-bin/fweisz/console
 n          = 3
-lane       = ActiveLane
+lane       = Avx2Lane (width 4)
 S          = (5.0000000000, 2.8867513371)
 K(S)       = 16.6602540378
 iterations = 26
@@ -217,18 +223,15 @@ int main()
 ```
 
 For reading the standard `x y b` input format programmatically, use
-`fweisz::Parser`. The API is built on C++23 `std::expected`, so success
-and failure are values you destructure with `if (result)` — no
-out-parameters, no `Release()`, no mutable state on the parser:
+`fweisz::Parser::Parse`. It returns `std::expected<Points, Error>`:
 
 ```cpp
 #include "fweisz/parser.h"
 
 #include <fstream>
 
-const fweisz::Parser parser;
 std::ifstream in("examples/eiselt.txt");
-const auto result = parser.Parse(in);
+const auto result = fweisz::Parser::Parse(in);
 if (!result) {
     std::fprintf(stderr, "%s\n", result.error().Format().c_str());
     return 2;
@@ -238,9 +241,7 @@ const fweisz::Result r = fweisz::Solve(result->xs, result->ys, result->bs);
 
 `Parser::Error::kind` is an enum (`ParseFailure` / `NonPositiveWeight`) for
 callers that want to react to the failure category without parsing the
-message. A `Parser` instance is stateless — every parse function is `const`
-and returns a fresh `std::expected<Points, Error>`, so one instance can be
-reused across any number of inputs.
+message.
 
 For tweaking solver knobs:
 
@@ -298,4 +299,4 @@ noticeably.
 
 ## License
 
-MIT. See the SPDX-style header at the top of each source file.
+MIT. See the SPDX-style header at the top of each source file and the LICENSE file at the repo root.

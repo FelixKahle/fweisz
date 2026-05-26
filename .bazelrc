@@ -1,5 +1,12 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# Core
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Enables build:linux / build:macos / build:windows config groups.
 common --enable_platform_specific_config
 
+# `parse_headers` triggers a redundant compile of every header in isolation;
+# disabled here since our CI already builds every target.
 build --features=-parse_headers
 build --host_features=-parse_headers
 
