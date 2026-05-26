@@ -1,0 +1,21 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "platform",
+    hdrs = [
+        "platform.h",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "simd",
+    hdrs = [
+        "simd.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":platform",
+    ],
+)

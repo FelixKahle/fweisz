@@ -1,0 +1,45 @@
+common --enable_platform_specific_config
+
+build --features=-parse_headers
+build --host_features=-parse_headers
+
+# Bazel 9 removed legacy built-in cc_library / cc_test / cc_binary symbols.
+# Some external modules (e.g. googletest's distributed BUILD files) still use
+# the unqualified names; auto-load them from @rules_cc so those BUILDs keep
+# working without patches.
+common --incompatible_autoload_externally=+@rules_cc
+
+# ---------------------------------------------------------------------------------------------------------------------
+# C++ language standard
+# ---------------------------------------------------------------------------------------------------------------------
+build:linux   --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
+build:macos   --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
+build:windows --cxxopt=/std:c++23preview --host_cxxopt=/std:c++23preview
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Warnings
+# ---------------------------------------------------------------------------------------------------------------------
+build:linux   --cxxopt=-Wall --cxxopt=-Wextra --cxxopt=-Wpedantic --cxxopt=-Wno-nullability-extension
+build:macos   --cxxopt=-Wall --cxxopt=-Wextra --cxxopt=-Wpedantic --cxxopt=-Wno-nullability-extension
+build:windows --cxxopt=/w --host_cxxopt=/w
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Optimization (-O3 / /O2 + native ISA so SIMD detection picks AVX2/NEON)
+# ---------------------------------------------------------------------------------------------------------------------
+build:linux   --copt=-O3 --copt=-march=native
+build:macos   --copt=-O3 --copt=-march=native
+build:windows --copt=/O2 --copt=/arch:AVX2
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Link-time optimization
+# ---------------------------------------------------------------------------------------------------------------------
+build:linux   --copt=-flto --linkopt=-flto
+build:macos   --copt=-flto --linkopt=-flto
+build:windows --copt=/GL --linkopt=/LTCG
+
+# ---------------------------------------------------------------------------------------------------------------------
+# No exceptions
+# ---------------------------------------------------------------------------------------------------------------------
+build:linux   --cxxopt=-fno-exceptions
+build:macos   --cxxopt=-fno-exceptions
+build:windows --cxxopt=/EHs-c- --cxxopt=/D_HAS_EXCEPTIONS=0

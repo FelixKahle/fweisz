@@ -1,0 +1,97 @@
+name: Build and Test
+permissions:
+  contents: read
+
+on: [ push, pull_request ]
+
+jobs:
+  test:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # ------------------------------------------------------------------------------------------------------------
+          # Linux
+          # ------------------------------------------------------------------------------------------------------------
+          - name: "Linux x86_64 (GCC)"
+            os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+
+          - name: "Linux x86_64 (Clang)"
+            os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+            install_clang: true
+
+          - name: "Linux ARM64 (GCC)"
+            os: ubuntu-24.04-arm
+            cc: gcc
+            cxx: g++
+            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+
+          # ------------------------------------------------------------------------------------------------------------
+          # macOS
+          # ------------------------------------------------------------------------------------------------------------
+          - name: "macOS x86_64 (Apple Clang)"
+            os: macos-13
+            cc: clang
+            cxx: clang++
+            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+
+          - name: "macOS ARM64 (Apple Clang)"
+            os: macos-14
+            cc: clang
+            cxx: clang++
+            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+
+          # ------------------------------------------------------------------------------------------------------------
+          # Windows
+          # ------------------------------------------------------------------------------------------------------------
+          - name: "Windows x86_64 (MSVC)"
+            os: windows-latest
+            cc: ""
+            cxx: ""
+            std_flag: "--cxxopt=/std:c++23preview --cxxopt=/Zc:__cplusplus --cxxopt=/EHs-c- --cxxopt=/D_HAS_EXCEPTIONS=0"
+
+    env:
+      CC: ${{ matrix.config.cc }}
+      CXX: ${{ matrix.config.cxx }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.14.0
+        with:
+          bazelisk-cache: true
+          # Scope the on-disk cache per matrix entry so caches from different
+          # OS/arch/toolchain combinations do not collide.
+          disk-cache: ${{ github.workflow }}-${{ matrix.config.os }}-${{ matrix.config.cc }}
+          repository-cache: true
+
+      - name: Install Clang (Linux only)
+        if: matrix.config.install_clang == true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+
+      - name: Build (Debug)
+        run: bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }}
+
+      - name: Test (Debug)
+        run: bazel test //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --test_output=errors
+
+      - name: Build (Release)
+        run: bazel build //... --compilation_mode=opt ${{ matrix.config.std_flag }}
+
+      - name: Test (Release)
+        run: bazel test //... --compilation_mode=opt ${{ matrix.config.std_flag }} --test_output=errors

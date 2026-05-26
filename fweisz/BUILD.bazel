@@ -1,0 +1,79 @@
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
+cc_library(
+    name = "lanes",
+    hdrs = [
+        "lanes.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//fweisz/base:platform",
+        "//fweisz/base:simd",
+    ],
+)
+
+cc_library(
+    name = "algorithm",
+    hdrs = [
+        "algorithm.h",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lanes",
+        "//fweisz/base:platform",
+    ],
+)
+
+cc_library(
+    name = "parser",
+    srcs = ["parser.cc"],
+    hdrs = ["parser.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "console",
+    srcs = [
+        "console.cc",
+    ],
+    deps = [
+        ":algorithm",
+        ":lanes",
+        ":parser",
+    ],
+)
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
+
+cc_test(
+    name = "parser_test",
+    srcs = ["parser_test.cc"],
+    deps = [
+        ":parser",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "algorithm_test",
+    srcs = ["algorithm_test.cc"],
+    deps = [
+        ":algorithm",
+        ":lanes",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "lanes_test",
+    srcs = ["lanes_test.cc"],
+    deps = [
+        ":lanes",
+        "//fweisz/base:simd",
+        "@googletest//:gtest_main",
+    ],
+)
