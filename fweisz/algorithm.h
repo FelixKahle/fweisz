@@ -78,7 +78,7 @@ namespace fweisz
 
     /// @brief Knobs controlling termination and numerical guards.
     ///
-    /// The defaults are conservative: they prioritise correctness over speed and
+    /// The defaults are conservative: they prioritize correctness over speed and
     /// are appropriate for double-precision inputs in a typical engineering
     /// coordinate range.
     struct Config
@@ -87,23 +87,6 @@ namespace fweisz
         double tolerance = 1e-8;      ///< Convergence threshold on @f$ \lVert S^{(r+1)} - S^{(r)} \rVert_2 @f$.
         double singular_eps2 = 1e-20; ///< Floor for @f$ d_j^2 @f$ to avoid division by zero when @f$ S @f$ coincides with a demand point.
     };
-
-    namespace detail
-    {
-        /// @brief Per-iteration partial sums of the Weiszfeld update.
-        ///
-        /// Holds the unnormalized numerator (@ref num_x, @ref num_y), the
-        /// denominator (@ref den), and the current objective value
-        /// @f$ K(S) @f$ (@ref cost). The next iterate is
-        /// @f$ (\text{num\_x}/\text{den},\, \text{num\_y}/\text{den}) @f$.
-        struct Accumulators
-        {
-            double num_x; ///< @f$ \sum_j (b_j / d_j)\, x_j @f$.
-            double num_y; ///< @f$ \sum_j (b_j / d_j)\, y_j @f$.
-            double den;   ///< @f$ \sum_j b_j / d_j @f$.
-            double cost;  ///< @f$ \sum_j b_j \, d_j = K(S) @f$.
-        };
-    } // namespace detail
 
     // -----------------------------------------------------------------------------------------------------------------
     // Solver
@@ -220,11 +203,25 @@ namespace fweisz
         }
 
     private:
+        /// @brief Per-iteration partial sums of the Weiszfeld update.
+        ///
+        /// Holds the unnormalized numerator (@ref num_x, @ref num_y), the
+        /// denominator (@ref den), and the current objective value
+        /// @f$ K(S) @f$ (@ref cost). The next iterate is
+        /// @f$ (\text{num\_x}/\text{den},\, \text{num\_y}/\text{den}) @f$.
+        struct Accumulators
+        {
+            double num_x; ///< @f$ \sum_j (b_j / d_j)\, x_j @f$.
+            double num_y; ///< @f$ \sum_j (b_j / d_j)\, y_j @f$.
+            double den;   ///< @f$ \sum_j b_j / d_j @f$.
+            double cost;  ///< @f$ \sum_j b_j \, d_j = K(S) @f$.
+        };
+
         /// @brief Convert raw Weiszfeld accumulators into the next iterate.
         ///
         /// @param acc Partial sums produced by @ref Step.
         /// @return The weighted centroid implied by @p acc.
-        [[nodiscard]] FWEISZ_FORCE_INLINE static Point WeightedCentroid(const detail::Accumulators& acc) noexcept
+        [[nodiscard]] FWEISZ_FORCE_INLINE static Point WeightedCentroid(const Accumulators& acc) noexcept
         {
             const double inv_den = 1.0 / acc.den;
             return {acc.num_x * inv_den, acc.num_y * inv_den};
@@ -319,7 +316,7 @@ namespace fweisz
         /// @param sx,sy Current iterate.
         /// @return The four partial sums (reduced to scalars).
         template <SimdLane Lane>
-        [[nodiscard]] FWEISZ_FORCE_INLINE detail::Accumulators Step(double sx, double sy) const noexcept
+        [[nodiscard]] FWEISZ_FORCE_INLINE Accumulators Step(double sx, double sy) const noexcept
         {
             static_assert(std::has_single_bit(Lane::kLanes), "kLanes must be a power of 2");
 
