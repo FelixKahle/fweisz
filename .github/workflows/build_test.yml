@@ -70,7 +70,7 @@ jobs:
           submodules: recursive
 
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.14.0
+        uses: bazel-contrib/setup-bazel@0.19.0
         with:
           bazelisk-cache: true
           # Scope the on-disk cache per matrix entry so caches from different
