@@ -1,8 +1,32 @@
+# Copyright (c) 2026 Felix Kahle.
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 name: Build and Test
 permissions:
   contents: read
 
-on: [ push, pull_request ]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -62,6 +86,9 @@ jobs:
     env:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
+      # Workspace-relative cache dir so the same path works on Linux, macOS,
+      # and Windows. Bazel accepts forward slashes on all three.
+      BAZEL_CACHE_DIR: ${{ github.workspace }}/.bazel-cache
 
     steps:
       - name: Checkout Code
@@ -69,14 +96,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.19.0
+      - name: Setup Bazelisk
+        uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Cache Bazel (disk + repository)
+        uses: actions/cache@v4
         with:
-          bazelisk-cache: true
-          # Scope the on-disk cache per matrix entry so caches from different
-          # OS/arch/toolchain combinations do not collide.
-          disk-cache: ${{ github.workflow }}-${{ matrix.config.os }}-${{ matrix.config.cc }}
-          repository-cache: true
+          path: ${{ env.BAZEL_CACHE_DIR }}
+          # Bust the cache when the lockfile or .bazelrc change; otherwise reuse.
+          key: bazel-${{ matrix.config.os }}-${{ matrix.config.cc }}-${{ hashFiles('MODULE.bazel.lock', '.bazelrc') }}
+          restore-keys: |
+            bazel-${{ matrix.config.os }}-${{ matrix.config.cc }}-
 
       - name: Install Clang (Linux only)
         if: matrix.config.install_clang == true
@@ -85,13 +115,17 @@ jobs:
           sudo apt-get install -y clang
 
       - name: Build (Debug)
-        run: bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }}
+        run: |
+          bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo
 
       - name: Test (Debug)
-        run: bazel test //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --test_output=errors
+        run: |
+          bazel test //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo --test_output=errors
 
       - name: Build (Release)
-        run: bazel build //... --compilation_mode=opt ${{ matrix.config.std_flag }}
+        run: |
+          bazel build //... --compilation_mode=opt ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo
 
       - name: Test (Release)
-        run: bazel test //... --compilation_mode=opt ${{ matrix.config.std_flag }} --test_output=errors
+        run: |
+          bazel test //... --compilation_mode=opt ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo --test_output=errors
