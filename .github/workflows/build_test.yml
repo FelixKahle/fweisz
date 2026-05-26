@@ -44,7 +44,10 @@ jobs:
             os: ubuntu-latest
             cc: clang
             cxx: clang++
-            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
+            # Use libc++ instead of libstdc++ so std::expected / std::format
+            # come from LLVM's own standard library — bypasses Bazel's
+            # patchy auto-wiring of libstdc++ include paths under Clang.
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions' --cxxopt='-stdlib=libc++' --linkopt='-stdlib=libc++'"
 
           - name: "Linux ARM64 (GCC)"
             os: ubuntu-24.04-arm
@@ -53,7 +56,7 @@ jobs:
             std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
           - name: "macOS x86_64 (Apple Clang)"
-            os: macos-13
+            os: macos-15-intel
             cc: clang
             cxx: clang++
             std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
@@ -87,11 +90,11 @@ jobs:
           disk-cache: ${{ github.workflow }}
           repository-cache: true
 
-      - name: Install Clang (Linux Only)
+      - name: Install Clang + libc++ (Linux Only)
         if: matrix.config.name == 'Linux x86_64 (Clang)'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang
+          sudo apt-get install -y clang libc++-dev libc++abi-dev
 
       - name: Build (Debug)
         run: bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }}

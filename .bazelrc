@@ -50,3 +50,11 @@ build:windows --copt=/GL --linkopt=/LTCG
 build:linux   --cxxopt=-fno-exceptions
 build:macos   --cxxopt=-fno-exceptions
 build:windows --cxxopt=/EHs-c- --cxxopt=/D_HAS_EXCEPTIONS=0
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Windows: Bazel 9's def_parser.exe crashes (ACCESS_VIOLATION) generating
+# DEF files for some static libraries (notably googletest) when built in
+# debug mode. We never build a DLL here, so symbol export is unused —
+# disable the DEF generation feature to bypass the broken tool.
+# ---------------------------------------------------------------------------------------------------------------------
+build:windows --features=-windows_export_all_symbols
