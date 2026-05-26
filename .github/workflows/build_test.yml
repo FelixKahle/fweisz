@@ -23,10 +23,7 @@ name: Build and Test
 permissions:
   contents: read
 
-on:
-  push:
-  pull_request:
-  workflow_dispatch:
+on: [ push, pull_request, workflow_dispatch ]
 
 jobs:
   test:
@@ -37,58 +34,45 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # ------------------------------------------------------------------------------------------------------------
-          # Linux
-          # ------------------------------------------------------------------------------------------------------------
           - name: "Linux x86_64 (GCC)"
             os: ubuntu-latest
             cc: gcc
             cxx: g++
-            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
           - name: "Linux x86_64 (Clang)"
             os: ubuntu-latest
             cc: clang
             cxx: clang++
-            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
-            install_clang: true
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
           - name: "Linux ARM64 (GCC)"
             os: ubuntu-24.04-arm
             cc: gcc
             cxx: g++
-            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
-          # ------------------------------------------------------------------------------------------------------------
-          # macOS
-          # ------------------------------------------------------------------------------------------------------------
           - name: "macOS x86_64 (Apple Clang)"
             os: macos-13
             cc: clang
             cxx: clang++
-            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
           - name: "macOS ARM64 (Apple Clang)"
             os: macos-14
             cc: clang
             cxx: clang++
-            std_flag: "--cxxopt=-std=c++23 --cxxopt=-fno-exceptions"
+            std_flag: "--cxxopt='-std=c++23' --cxxopt='-fno-exceptions'"
 
-          # ------------------------------------------------------------------------------------------------------------
-          # Windows
-          # ------------------------------------------------------------------------------------------------------------
           - name: "Windows x86_64 (MSVC)"
             os: windows-latest
             cc: ""
             cxx: ""
-            std_flag: "--cxxopt=/std:c++23preview --cxxopt=/Zc:__cplusplus --cxxopt=/EHs-c- --cxxopt=/D_HAS_EXCEPTIONS=0"
+            std_flag: "--cxxopt='/std:c++23preview' --cxxopt='/Zc:__cplusplus' --cxxopt='/EHs-c-' --cxxopt='/D_HAS_EXCEPTIONS=0'"
 
     env:
       CC: ${{ matrix.config.cc }}
       CXX: ${{ matrix.config.cxx }}
-      # Workspace-relative cache dir so the same path works on Linux, macOS,
-      # and Windows. Bazel accepts forward slashes on all three.
-      BAZEL_CACHE_DIR: ${{ github.workspace }}/.bazel-cache
 
     steps:
       - name: Checkout Code
@@ -96,36 +80,27 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Bazelisk
-        uses: bazelbuild/setup-bazelisk@v3
-
-      - name: Cache Bazel (disk + repository)
-        uses: actions/cache@v4
+      - name: Setup Bazel
+        uses: bazel-contrib/setup-bazel@0.14.0
         with:
-          path: ${{ env.BAZEL_CACHE_DIR }}
-          # Bust the cache when the lockfile or .bazelrc change; otherwise reuse.
-          key: bazel-${{ matrix.config.os }}-${{ matrix.config.cc }}-${{ hashFiles('MODULE.bazel.lock', '.bazelrc') }}
-          restore-keys: |
-            bazel-${{ matrix.config.os }}-${{ matrix.config.cc }}-
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
 
-      - name: Install Clang (Linux only)
-        if: matrix.config.install_clang == true
+      - name: Install Clang (Linux Only)
+        if: matrix.config.name == 'Linux x86_64 (Clang)'
         run: |
           sudo apt-get update
           sudo apt-get install -y clang
 
       - name: Build (Debug)
-        run: |
-          bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo
+        run: bazel build //... --compilation_mode=dbg ${{ matrix.config.std_flag }}
 
       - name: Test (Debug)
-        run: |
-          bazel test //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo --test_output=errors
+        run: bazel test //... --compilation_mode=dbg ${{ matrix.config.std_flag }} --test_output=errors
 
       - name: Build (Release)
-        run: |
-          bazel build //... --compilation_mode=opt ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo
+        run: bazel build //... --compilation_mode=opt ${{ matrix.config.std_flag }}
 
       - name: Test (Release)
-        run: |
-          bazel test //... --compilation_mode=opt ${{ matrix.config.std_flag }} --disk_cache=${{ env.BAZEL_CACHE_DIR }}/disk --repository_cache=${{ env.BAZEL_CACHE_DIR }}/repo --test_output=errors
+        run: bazel test //... --compilation_mode=opt ${{ matrix.config.std_flag }} --test_output=errors
